@@ -204,24 +204,33 @@ SELECT COUNT(*) FROM fato_item_contratado f LEFT JOIN dim_orgao d USING (sk_orga
 O arquivo está em `powerbi/dashboard_pncp.pbix`. Cada página segue **pergunta → números → conclusão**, e os números são os mesmos de `sql/02_perguntas.sql`.
 
 **Modelo, calendário e medidas**
-
+**MODELO**
 ![Modelo estrela no Power BI](docs/img/modelo_relacionamentos.png)
+
+**CALENDÁRIO E ORDENAÇÃO**
 ![Calendário e ordenação](docs/img/calendario_ordenacao.png)
+![Calendário e ordenação](docs/img/calendario_ordenacao_2.png)
+![Calendário e ordenação](docs/img/calendario_ordenacao_3.png)
+
+**TABELA DE MEDIDAS**
 ![Tabela de medidas com pastas por pergunta](docs/img/tabela_medidas.png)
 
 O `Calendario` é criado em DAX (`CALENDARAUTO`, limites vindos dos dados), com `Mes` ordenado por `MesNum` e `AnoMes` ordenado por `AnoMesNum`, marcado como tabela de datas e **relacionado à fato por duas datas**: `data_publicacao` (ativa) e `data_homologacao` (inativa, usada por `USERELATIONSHIP`). A hierarquia automática de datas está desligada.
 
 **Navegação e tooltip**
-
+**MENU ABERTO**
 ![Menu aberto](docs/img/menu_aberto.png)
+
+**MENU FECHADO**
 ![Menu fechado](docs/img/menu_fechado.png)
+
+**TOOLTIP EM AÇÃO**
 ![Tooltip em ação](docs/img/tooltip_em_acao.png)
 
 O menu retrátil usa dois bookmarks (menu aberto e menu fechado) acionados por botões. Os tooltips são páginas ocultas que, ao passar o mouse, mostram economia, volume, ciclo médio e a evolução mensal do órgão, da modalidade ou do mês sob o cursor.
 
 **Páginas e conclusões**
 
-> Conclusões de P1 a P6: copie para cá o texto da caixa de conclusão de cada página do dashboard.
 
 **P1 — Economia.**![Página 1](docs/img/p01_economia.png)
 O governo economizou 14,46% na base comparável (R$ 992,86 Mi).
@@ -239,7 +248,7 @@ A morosidade é um problema grave. O ciclo médio é de **48,1 dias**, mas há �
 A despesa é fortemente centralizada nas regiões **Sudeste** e **Centro-Oeste**, acompanhando a localização sede dos principais Ministérios.
 
 **P6 — Perfil dos Gastos**![Página 6](docs/img/p06_perfil.png)
-git Obras e Engenharia dominam o volume financeiro (60,8%), seguidas de Serviços (36,6%). Bens representam apenas 2,6% do montante.
+Obras e Engenharia dominam o volume financeiro (60,8%), seguidas de Serviços (36,6%). Bens representam apenas 2,6% do montante.
 
 **P7 — Evolução mensal.** ![Página 7](docs/img/p07_evolucao.png)
 O volume é muito irregular: o pico é **jun/2025 (R$ 1,72 bi, 21,4% do ano)** e o menor mês é mai/2025 (R$ 228 mi). A economia % varia de **8,97% (dez)** a **20,49% (ago)** e não acompanha o volume: nos meses de pico (jun e dez) o desconto foi dos menores.
