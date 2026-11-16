@@ -215,6 +215,7 @@ O arquivo está em `powerbi/dashboard_pncp.pbix`. Cada página segue **pergunta 
 
 
 
+
 **TABELA DE MEDIDAS**
 ![Tabela de medidas com pastas por pergunta](docs/img/tabela_medidas.png)
 
