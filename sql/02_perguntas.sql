@@ -146,3 +146,117 @@ SELECT
 FROM fato_item_contratado
 GROUP BY perfil_gasto
 ORDER BY volume DESC;
+
+-- =====================================================================================
+-- PERGUNTA 7 - Evolucao mensal e sazonalidade
+-- Volume homologado e economia % mes a mes (pela DATA DE PUBLICACAO), com a variacao
+-- em relacao ao mes anterior. LAG traz o volume do mes anterior (o 1o mes fica NULL).
+-- Referencia da prova real: pico em jun/2025 (R$ 1.719.241.434,54 = 21,4%); menor mes: mai/2025.
+-- Economia % mensal: de 8,97% (dez/2025) a 20,49% (ago/2025).
+-- =====================================================================================
+WITH mensal AS (
+    SELECT
+        DATE_TRUNC('month', data_publicacao)::date                                  AS mes,
+        SUM(valor_total_homologado)                                                 AS volume,
+        SUM(economia_valor)                                                         AS economia_reais,
+        SUM(CASE WHEN comparavel = 1 THEN valor_total_estimado ELSE 0 END)          AS estimado_comparavel
+    FROM fato_item_contratado
+    GROUP BY DATE_TRUNC('month', data_publicacao)
+)
+SELECT
+    TO_CHAR(mes, 'YYYY-MM')                                                         AS ano_mes,
+    volume,
+    ROUND(100 * volume / SUM(volume) OVER (), 1)                                    AS pct_do_ano,
+    LAG(volume) OVER (ORDER BY mes)                                                 AS volume_mes_anterior,
+    ROUND(100 * (volume - LAG(volume) OVER (ORDER BY mes))
+          / NULLIF(LAG(volume) OVER (ORDER BY mes), 0), 1)                          AS variacao_mensal_pct,
+    economia_reais,
+    ROUND(100 * economia_reais / NULLIF(estimado_comparavel, 0), 2)                 AS economia_pct
+FROM mensal
+ORDER BY mes;
+
+
+-- =====================================================================================
+-- PERGUNTA 8 - Sobrepreco
+-- Itens comparaveis homologados ACIMA do estimado: quantos, quanto soma em R$ e onde se concentram.
+-- Sem o filtro comparavel = 1 seriam 60 itens (distorcido por itens nao comparaveis).
+-- Referencia da prova real: 27 itens, R$ 44.440,34.
+-- =====================================================================================
+SELECT
+    COUNT(*)                                                    AS itens_com_sobrepreco,
+    SUM(valor_total_homologado - valor_total_estimado)          AS sobrepreco_reais
+FROM fato_item_contratado
+WHERE comparavel = 1
+  AND valor_total_homologado > valor_total_estimado;
+
+-- Orgaos onde o sobrepreco se concentra (agrupado pelo nome padronizado)
+SELECT
+    o.nome_orgao,
+    COUNT(*)                                                    AS itens_com_sobrepreco,
+    SUM(t.valor_total_homologado - t.valor_total_estimado)      AS sobrepreco_reais,
+    ROUND(100 * SUM(t.valor_total_homologado - t.valor_total_estimado)
+          / SUM(SUM(t.valor_total_homologado - t.valor_total_estimado)) OVER (), 1) AS pct_do_sobrepreco
+FROM fato_item_contratado t
+JOIN dim_orgao o ON o.sk_orgao = t.sk_orgao
+WHERE t.comparavel = 1
+  AND t.valor_total_homologado > t.valor_total_estimado
+GROUP BY o.nome_orgao
+ORDER BY sobrepreco_reais DESC
+LIMIT 10;
+
+
+-- =====================================================================================
+-- PERGUNTA 9 - Micro e pequenas empresas (ME + EPP)
+-- Participacao no volume, itens vencidos e fornecedores; e o desagio das MPE vs demais.
+-- "Demais" inclui porte Demais e porte nao informado (NULL).
+-- Referencia da prova real: 19,87% do volume, 3.820 itens, 1.494 fornecedores;
+-- economia % MPE 15,97% x demais 13,97%.
+-- =====================================================================================
+SELECT
+    CASE WHEN f.porte IN ('ME', 'EPP') THEN 'MPE' ELSE 'Demais' END                 AS grupo,
+    COUNT(*)                                                                        AS itens_vencidos,
+    COUNT(DISTINCT f.sk_fornecedor)                                                 AS fornecedores,
+    SUM(t.valor_total_homologado)                                                   AS volume,
+    ROUND(100 * SUM(t.valor_total_homologado)
+          / (SELECT SUM(valor_total_homologado) FROM fato_item_contratado), 2)      AS pct_do_volume,
+    ROUND(100 * SUM(t.economia_valor)
+          / NULLIF(SUM(CASE WHEN t.comparavel = 1 THEN t.valor_total_estimado ELSE 0 END), 0), 2) AS economia_pct
+FROM fato_item_contratado t
+JOIN dim_fornecedor f ON f.sk_fornecedor = t.sk_fornecedor
+GROUP BY CASE WHEN f.porte IN ('ME', 'EPP') THEN 'MPE' ELSE 'Demais' END
+ORDER BY volume DESC;
+
+
+-- =====================================================================================
+-- PERGUNTA 10 - Orgaos e Poderes
+-- (a) Distribuicao de volume e economia por Poder.
+-- Referencia da prova real: volume Executivo 97,66% | Judiciario 2,29% | Legislativo 0,05%;
+-- economia % Executivo 14,54 | Judiciario 10,74 | Legislativo 21,57; unidades 350 | 10 | 3.
+-- =====================================================================================
+SELECT
+    o.poder,
+    COUNT(DISTINCT o.sk_orgao)                                                      AS unidades_compradoras,
+    SUM(t.valor_total_homologado)                                                   AS volume,
+    ROUND(100 * SUM(t.valor_total_homologado)
+          / (SELECT SUM(valor_total_homologado) FROM fato_item_contratado), 2)      AS pct_do_volume,
+    ROUND(100 * SUM(t.economia_valor)
+          / NULLIF(SUM(CASE WHEN t.comparavel = 1 THEN t.valor_total_estimado ELSE 0 END), 0), 2) AS economia_pct
+FROM fato_item_contratado t
+JOIN dim_orgao o ON o.sk_orgao = t.sk_orgao
+GROUP BY o.poder
+ORDER BY volume DESC;
+
+-- (b) Top 10 orgaos por volume (agrupado pelo NOME padronizado).
+-- Referencia da prova real: DNIT lidera com R$ 2.610.387.744,91 (32,45%); top 10 = 71,29%.
+SELECT
+    o.nome_orgao,
+    SUM(t.valor_total_homologado)                                                   AS volume,
+    ROUND(100 * SUM(t.valor_total_homologado)
+          / (SELECT SUM(valor_total_homologado) FROM fato_item_contratado), 2)      AS pct_do_volume,
+    ROUND(100 * SUM(SUM(t.valor_total_homologado)) OVER (ORDER BY SUM(t.valor_total_homologado) DESC)
+          / (SELECT SUM(valor_total_homologado) FROM fato_item_contratado), 2)      AS pct_acumulado
+FROM fato_item_contratado t
+JOIN dim_orgao o ON o.sk_orgao = t.sk_orgao
+GROUP BY o.nome_orgao
+ORDER BY volume DESC
+LIMIT 10;
