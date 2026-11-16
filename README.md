@@ -204,6 +204,7 @@ SELECT COUNT(*) FROM fato_item_contratado f LEFT JOIN dim_orgao d USING (sk_orga
 O arquivo está em `powerbi/dashboard_pncp.pbix`. Cada página segue **pergunta → números → conclusão**, e os números são os mesmos de `sql/02_perguntas.sql`.
 
 **Modelo, calendário e medidas**
+
 **MODELO**
 ![Modelo estrela no Power BI](docs/img/modelo_relacionamentos.png)
 
@@ -211,6 +212,8 @@ O arquivo está em `powerbi/dashboard_pncp.pbix`. Cada página segue **pergunta 
 ![Calendário e ordenação](docs/img/calendario_ordenacao.png)
 ![Calendário e ordenação](docs/img/calendario_ordenacao_2.png)
 ![Calendário e ordenação](docs/img/calendario_ordenacao_3.png)
+
+
 
 **TABELA DE MEDIDAS**
 ![Tabela de medidas com pastas por pergunta](docs/img/tabela_medidas.png)
