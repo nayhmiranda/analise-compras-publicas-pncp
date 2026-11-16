@@ -215,13 +215,14 @@ O arquivo está em `powerbi/dashboard_pncp.pbix`. Cada página segue **pergunta 
 
 
 
-
+<br>
 **TABELA DE MEDIDAS**
 ![Tabela de medidas com pastas por pergunta](docs/img/tabela_medidas.png)
 
 O `Calendario` é criado em DAX (`CALENDARAUTO`, limites vindos dos dados), com `Mes` ordenado por `MesNum` e `AnoMes` ordenado por `AnoMesNum`, marcado como tabela de datas e **relacionado à fato por duas datas**: `data_publicacao` (ativa) e `data_homologacao` (inativa, usada por `USERELATIONSHIP`). A hierarquia automática de datas está desligada.
 
 **Navegação e tooltip**
+<br>
 **MENU ABERTO**
 ![Menu aberto](docs/img/menu_aberto.png)
 
